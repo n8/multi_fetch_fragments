@@ -14,18 +14,16 @@ module MultiFetchFragments
       end
 
       result = []
-      if @options[:cache].present?
 
+      if cache_configured? && @options[:cache].present?
         keys_to_collection_map = {}
+
         @collection.each do |item| 
-          # debugger
-
           key = @options[:cache].is_a?(Proc) ? @options[:cache].call(item) : item
-
           expanded_key = ActiveSupport::Cache.expand_cache_key(key)
-
           keys_to_collection_map[expanded_key] = item 
         end
+
         collection_to_keys_map = keys_to_collection_map.invert
 
         result_hash = Rails.cache.read_multi(keys_to_collection_map.keys)
@@ -41,6 +39,7 @@ module MultiFetchFragments
           end
         end
 
+        # sequentially render any non-cached objects remaining, and cache them
         if @collection.any?
           collections_objects = @collection.clone
 
