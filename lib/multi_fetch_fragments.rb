@@ -7,6 +7,7 @@ module MultiFetchFragments
 
   private
     def render_collection_with_multi_fetch_cache
+
       return nil if @collection.blank?
 
       if @options.key?(:spacer_template)
@@ -15,7 +16,7 @@ module MultiFetchFragments
 
       result = []
 
-      if cache_configured? && @options[:cache].present?
+      if ActionController::Base.perform_caching && @options[:cache].present?
         keys_to_collection_map = {}
 
         @collection.each do |item| 
@@ -62,7 +63,7 @@ module MultiFetchFragments
     end
 
   class Railtie < Rails::Railtie
-    initializer "etag_version_ids.initialize" do |app|
+    initializer "multi_fetch_fragments.initialize" do |app|
       ActionView::PartialRenderer.class_eval do
         include MultiFetchFragments
       end
