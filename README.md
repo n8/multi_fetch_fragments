@@ -3,7 +3,7 @@ Multi-fetch Fragments
 
 Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on Rails cache store. Some cache implementations have an optimized version of read_multi, which includes very popular Memcache stores like Dalli. Normally partial rendering and caching for a collection only retrieves items from the cache store with the less optimized read method.
 
-In a super simple test Rails app described below, we saw a 46% improvement for our test action. 
+In a super simple test Rails app described below, I saw a 46% improvement for our test action. 
 
 The action taking 168 ms per request on average (using apache bench) was improved to 90 ms. Application timeouts were also decreased from 1% of requests to 0%.
 
@@ -62,7 +62,7 @@ Depends on how many things your fetching from Memcache for a single page. But he
 
 There's two actions: without_gem and with_gem. without_gem performs caching around each individual fragment as it's rendered sequentially. with_gem uses the new ability this gem gives to the render partial method. 
 
-Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous users against the test app hosted on heroku. We configured heroku to use 10 dynos and unicorn with 3 workers on each dyno.
+Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous users against the test app hosted on heroku. I configured heroku to use 10 dynos and unicorn with 3 workers on each dyno.
 
 
 #### without_gem
