@@ -43,7 +43,6 @@ module MultiFetchFragments
 
         # sequentially render any non-cached objects remaining, and cache them
         if @collection.any?
-          # debugger
 
           collection_objects_clone = @collection.clone
 
@@ -53,8 +52,6 @@ module MultiFetchFragments
 
             collection_object  = collection_objects_clone[index]
             key = collection_to_keys_map[collection_object]
-
-            debugger if key.blank?
 
             Rails.cache.write(key, item)
           end
