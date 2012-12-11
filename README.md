@@ -1,15 +1,17 @@
 Multi-fetch Fragments
 ===========
 
-Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on Rails cache store. Some cache implementations have an optimized version of read_multi, which includes very popular Memcache stores like Dalli. Normally partial rendering and caching for a collection only retrieves items from the cache store with the less optimized read method.
+Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on the Rails cache store. Some cache implementations have an optimized version of read_multi, which includes the popular Dalli client to Memcached. Normally partial rendering and caching for a collection only retrieves items from the cache store with the less optimized read method.
 
-In a super simple test Rails app described below, I saw a 46% improvement for our test action. 
+In a super simple test Rails app described below, I saw a 46% improvement for the test action. 
 
 The action taking 168 ms per request on average (using apache bench) was improved to 90 ms. Application timeouts were also decreased from 1% of requests to 0%.
 
+The ideal user of this gem is someone who's rendering and caching a collection of the same partial. (e.g. Todo lists, rows in a table)
+
 ## Syntax
 
-If you want to automatically cache each partial rendered as a collection and have them fetched back from Memcache with read_multi: 
+If you want to automatically render a collection and cache each partial with it's default cache key: 
 
 ```
 <%= render partial: 'item', collection: @items, cache: true %>
@@ -56,7 +58,7 @@ Returns a hash mapping the names provided to the values found.
 How much faster?
 -----------------------------
 
-Depends on how many things your fetching from Memcache for a single page. But here's a simple application that renders 50 items to a page. Each of those items is a rendered partial that gets cached to memcache. 
+Depends on how many things your fetching from Memcached for a single page. But here's a simple application that renders 50 items to a page. Each of those items is a rendered partial that gets cached to memcache. 
 
 [https://github.com/n8/multi_fetch_fragments_test_app](https://github.com/n8/multi_fetch_fragments_test_app)
 
