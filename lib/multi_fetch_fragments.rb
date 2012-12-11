@@ -33,9 +33,9 @@ module MultiFetchFragments
         # if we had a cached value, we don't need to render that object from the collection. 
         # if it wasn't cached, we need to render those objects as before
         result_hash.each do |key, value|
-          if value.present?
-            collections_object = keys_to_collection_map[key]
-            @collection.delete(collections_object)
+          if value
+            collection_item = keys_to_collection_map[key]
+            @collection.delete(collection_item)
           end
         end
 
@@ -44,6 +44,7 @@ module MultiFetchFragments
         # sequentially render any non-cached objects remaining
         if @collection.any?
 
+          #store these to use later for sorting the results
           collection_objects_clone = @collection.clone
 
           non_cached_results = @template ? collection_with_template : collection_without_template
@@ -52,10 +53,9 @@ module MultiFetchFragments
         # sort the result according to the keys that were fed in, cache the non-cached results
         keys_to_collection_map.each do |key, value|
 
-          # was it in the cache?
           cached_value = result_hash[key]
           if cached_value
-            results << result_hash[key] 
+            results << cached_value
           else
             non_cached_result = non_cached_results.shift
             Rails.cache.write(key, non_cached_result)
