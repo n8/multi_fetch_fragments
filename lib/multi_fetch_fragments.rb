@@ -14,9 +14,10 @@ module MultiFetchFragments
         spacer = find_template(@options[:spacer_template]).render(@view, @locals)
       end
 
-      result = []
+      results = []
 
       if ActionController::Base.perform_caching && @options[:cache].present?
+
         keys_to_collection_map = {}
 
         @collection.each do |item| 
@@ -35,31 +36,47 @@ module MultiFetchFragments
           if value.present?
             collections_object = keys_to_collection_map[key]
             @collection.delete(collections_object)
-
-            result << value
           end
         end
 
+        non_cached_results = []
+
         # sequentially render any non-cached objects remaining, and cache them
         if @collection.any?
-          collections_objects = @collection.clone
+          # debugger
+
+          collection_objects_clone = @collection.clone
 
           non_cached_results = @template ? collection_with_template : collection_without_template
 
           non_cached_results.each_with_index do |item, index| 
-            collection_object  = collections_objects[index]
+
+            collection_object  = collection_objects_clone[index]
             key = collection_to_keys_map[collection_object]
+
+            debugger if key.blank?
+
             Rails.cache.write(key, item)
           end
+        end
 
-          result += non_cached_results
+        # re-sort the result according to the keys that were fed in
+        keys_to_collection_map.each do |key, value|
+
+          # was it in the cache?
+          cached_value = result_hash[key]
+          if cached_value
+            results << result_hash[key] 
+          else
+            results << non_cached_results.shift
+          end
         end
 
       else
-        result = @template ? collection_with_template : collection_without_template
+        results = @template ? collection_with_template : collection_without_template
       end
       
-      result.join(spacer).html_safe
+      results.join(spacer).html_safe
     end
 
   class Railtie < Rails::Railtie
