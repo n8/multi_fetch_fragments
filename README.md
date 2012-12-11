@@ -34,7 +34,7 @@ Rails makes rendering a collection of partial templates very easy:
 And if you want to make this fast, Rails makes it easy to add a fragment cache block within the item partial. _item.html.erb might look like this: 
 
 ```
-<% cache item %>
+<% cache item do %>
   <p>
     Slower things...
 
