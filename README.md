@@ -1,7 +1,7 @@
 Multi-fetch Fragments
 ===========
 
-Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on the Rails cache store. Some cache implementations have an optimized version of read_multi, which includes the popular Dalli client to Memcached. Normally partial rendering and caching of a collection only sequentially retrieves items from the cache store with the less optimized read method.
+Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on the Rails cache store. Some cache implementations have an optimized version of read_multi, which includes the popular Dalli client to Memcached. Traditionally, partial rendering and caching of a collection occurs sequentially, retrieving items from the cache store with the less optimized read method.
 
 In a super simple test Rails app described below, I saw a 46-77% improvement for the test action. 
 
