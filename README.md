@@ -1,7 +1,7 @@
 Multi-fetch Fragments
 ===========
 
-Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on the Rails cache store. Some cache implementations have an optimized version of read_multi, which includes the popular Dalli client to Memcached. Normally partial rendering and caching for a collection only retrieves items from the cache store with the less optimized read method.
+Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on the Rails cache store. Some cache implementations have an optimized version of read_multi, which includes the popular Dalli client to Memcached. Normally partial rendering and caching of a collection only sequentially retrieves items from the cache store with the less optimized read method.
 
 In a super simple test Rails app described below, I saw a 46-77% improvement for the test action. 
 
@@ -46,7 +46,7 @@ And if you want to make this fast, Rails makes it easy to add a fragment cache b
 
 ```
 
-Caching the partial like this is great, but one drawback is that Rails will fetch each cached fragment sequentially. If you have to retrieve a bunch of these to render a single page, the additional overhead of fetching a bunch of things from Memcache can add up. Imagine if there's network latency between your app server and your memcache server. 
+Caching the partial like this is great, but one drawback is that Rails will fetch each cached fragment sequentially. If you have to retrieve a bunch of these to render a single page, the additional overhead of fetching a bunch of things from Memcached can add up. Imagine if there's network latency between your app server and your memcache server. 
 
 But Rails has a method defined for its cache store to read_multi: 
 
