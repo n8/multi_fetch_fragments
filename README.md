@@ -67,26 +67,17 @@ Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous use
 
 #### without_gem
 
-```
-SUMMARY
-
 This rush generated 648 successful hits in 1.0 min and we transferred 24.49 MB of data in and out of your app. The average hit rate of 10/second translates to about 892,683 hits/day.
 
 The average response time was 168 ms.
 
 You've got bigger problems, though: 1.07% of the users during this rush experienced timeouts or errors!
-```
 
 #### with_gem
-
-```
-SUMMARY
 
 This rush generated 705 successful hits in 1.0 min and we transferred 24.08 MB of data in and out of your app. The average hit rate of 11/second translates to about 969,892 hits/day.
 
 The average response time was 90 ms.
-
-```
 
 
 Installation
