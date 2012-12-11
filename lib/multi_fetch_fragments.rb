@@ -41,23 +41,15 @@ module MultiFetchFragments
 
         non_cached_results = []
 
-        # sequentially render any non-cached objects remaining, and cache them
+        # sequentially render any non-cached objects remaining
         if @collection.any?
 
           collection_objects_clone = @collection.clone
 
           non_cached_results = @template ? collection_with_template : collection_without_template
-
-          non_cached_results.each_with_index do |item, index| 
-
-            collection_object  = collection_objects_clone[index]
-            key = collection_to_keys_map[collection_object]
-
-            Rails.cache.write(key, item)
-          end
         end
 
-        # re-sort the result according to the keys that were fed in
+        # sort the result according to the keys that were fed in, cache the non-cached results
         keys_to_collection_map.each do |key, value|
 
           # was it in the cache?
@@ -65,7 +57,10 @@ module MultiFetchFragments
           if cached_value
             results << result_hash[key] 
           else
-            results << non_cached_results.shift
+            non_cached_result = non_cached_results.shift
+            Rails.cache.write(key, non_cached_result)
+
+            results << non_cached_result
           end
         end
 
