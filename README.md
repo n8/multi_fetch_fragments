@@ -1,9 +1,11 @@
 Multi-fetch Fragments
 ===========
 
-Multi-fetch Fragments makes rendering a collection of cached template partials easier and faster. It takes advantage of the read_multi method on Rails cache store. Some cache implementations have an optimized version of read_multi, which includes very popular Memcache stores like Dalli. 
+Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on Rails cache store. Some cache implementations have an optimized version of read_multi, which includes very popular Memcache stores like Dalli. Normally partial rendering and caching for a collection only retrieves items from the cache store with the less optimized read method.
 
-In a super simple test Rails app described below, we saw a 42% improvement: an action taking 324.789 ms per request on average (using apache bench) was found to improved to 187.514 ms.
+In a super simple test Rails app described below, we saw a 46% improvement for our test action. 
+
+The action taking 168 ms per request on average (using apache bench) was improved to 90 ms. Application timeouts were also decreased from 1% of requests to 0%.
 
 ## Syntax
 
@@ -16,7 +18,7 @@ If you want to automatically cache each partial rendered as a collection and hav
 If you want a custom cache key for this same behavior, use a Proc: 
 
 ```
-<%= render partial: 'item', collection: @items, cache: Proc.new{|item| [item, 'nates_awesome']} %>
+<%= render partial: 'item', collection: @items, cache: Proc.new{|item| [item, 'show']} %>
 ```
 
 ## Background
@@ -60,93 +62,29 @@ Depends on how many things your fetching from Memcache for a single page. But he
 
 There's two actions: without_gem and with_gem. without_gem performs caching around each individual fragment as it's rendered sequentially. with_gem uses the new ability this gem gives to the render partial method. 
 
-Here's an ab test performed on this app running on Heroku with a single dyno and using the free memcache server. 
-
-It was ~42% faster.
+Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous users against the test app hosted on heroku. We configured heroku to use 10 dynos and unicorn with 3 workers on each dyno.
 
 
 #### without_gem
 
 ```
-ab -n 100 -c 1 ....herokuapp.com/without_gem
+SUMMARY
 
-Server Software:        WEBrick/1.3.1
+This rush generated 648 successful hits in 1.0 min and we transferred 24.49 MB of data in and out of your app. The average hit rate of 10/second translates to about 892,683 hits/day.
 
-Document Path:          /without_gem
-Document Length:        52688 bytes
+The average response time was 168 ms.
 
-Concurrency Level:      1
-Time taken for tests:   32.479 seconds
-Complete requests:      100
-Failed requests:        29
-   (Connect: 0, Receive: 0, Length: 29, Exceptions: 0)
-Write errors:           0
-Total transferred:      5337860 bytes
-HTML transferred:       5268960 bytes
-Requests per second:    3.08 [#/sec] (mean)
-Time per request:       324.789 [ms] (mean)
-Time per request:       324.789 [ms] (mean, across all concurrent requests)
-Transfer rate:          160.50 [Kbytes/sec] received
-
-Connection Times (ms)
-              min  mean[+/-sd] median   max
-Connect:       98  107   8.0    106     153
-Processing:   103  217 103.0    185     659
-Waiting:       30  148 111.6    111     648
-Total:        242  324 102.6    291     765
-
-Percentage of the requests served within a certain time (ms)
-  50%    291
-  66%    309
-  75%    326
-  80%    340
-  90%    439
-  95%    627
-  98%    756
-  99%    765
- 100%    765 (longest request)
+You've got bigger problems, though: 1.07% of the users during this rush experienced timeouts or errors!
 ```
 
 #### with_gem
 
 ```
-ab -n 100 -c 1 ....herokuapp.com/with_gem
+SUMMARY
 
-Server Software:        WEBrick/1.3.1
+This rush generated 705 successful hits in 1.0 min and we transferred 24.08 MB of data in and out of your app. The average hit rate of 11/second translates to about 969,892 hits/day.
 
-Document Path:          /with_gem
-Document Length:        52536 bytes
-
-Concurrency Level:      1
-Time taken for tests:   18.751 seconds
-Complete requests:      100
-Failed requests:        62
-   (Connect: 0, Receive: 0, Length: 62, Exceptions: 0)
-Write errors:           0
-Total transferred:      5322680 bytes
-HTML transferred:       5253780 bytes
-Requests per second:    5.33 [#/sec] (mean)
-Time per request:       187.514 [ms] (mean)
-Time per request:       187.514 [ms] (mean, across all concurrent requests)
-Transfer rate:          277.20 [Kbytes/sec] received
-
-Connection Times (ms)
-              min  mean[+/-sd] median   max
-Connect:        1    2   0.5      2       4
-Processing:   143  186  62.5    166     589
-Waiting:       69  113  72.7     89     577
-Total:        145  187  62.5    168     590
-
-Percentage of the requests served within a certain time (ms)
-  50%    168
-  66%    182
-  75%    193
-  80%    205
-  90%    235
-  95%    313
-  98%    422
-  99%    590
- 100%    590 (longest request)
+The average response time was 90 ms.
 
 ```
 
@@ -163,5 +101,11 @@ Installation
 <%= render partial: 'item', collection: @items, cache: true %>
 ```
 
-Make sure to remove the cache block you might be using in the item partial in this case to individual cache the fragment.
+Note: You may need to refactor any partials that contain cache blocks. For example if you have an _item.html.erb partial with a cache block inside caching the item, you can remove the method call to "cache" and rely on the new render method abilities.
+
+
+Feedback
+--------
+
+Feedback and pull requests are greatly appreciated. Let me know if I can improve this.
 
