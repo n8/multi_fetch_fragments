@@ -18,6 +18,7 @@ module MultiFetchFragments
 
       if ActionController::Base.perform_caching && @options[:cache].present?
 
+        additional_cache_options = @options.fetch(:cache_options, {})
         keys_to_collection_map = {}
 
         @collection.each do |item| 
@@ -58,7 +59,7 @@ module MultiFetchFragments
             results << cached_value
           else
             non_cached_result = non_cached_results.shift
-            Rails.cache.write(key, non_cached_result)
+            Rails.cache.write(key, non_cached_result, additional_cache_options)
 
             results << non_cached_result
           end
