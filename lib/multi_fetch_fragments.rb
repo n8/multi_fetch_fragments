@@ -20,13 +20,11 @@ module MultiFetchFragments
 
         keys_to_collection_map = {}
 
-        @collection.each do |item| 
+        @collection.each do |item|
           key = @options[:cache].is_a?(Proc) ? @options[:cache].call(item) : item
           expanded_key = ActiveSupport::Cache.expand_cache_key(key)
-          keys_to_collection_map[expanded_key] = item 
+          keys_to_collection_map[expanded_key] = item
         end
-
-        collection_to_keys_map = keys_to_collection_map.invert
 
         result_hash = Rails.cache.read_multi(keys_to_collection_map.keys)
 
@@ -43,10 +41,6 @@ module MultiFetchFragments
 
         # sequentially render any non-cached objects remaining
         if @collection.any?
-
-          #store these to use later for sorting the results
-          collection_objects_clone = @collection.clone
-
           non_cached_results = @template ? collection_with_template : collection_without_template
         end
 
@@ -67,7 +61,7 @@ module MultiFetchFragments
       else
         results = @template ? collection_with_template : collection_without_template
       end
-      
+
       results.join(spacer).html_safe
     end
 
