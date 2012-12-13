@@ -109,5 +109,5 @@ Feedback
 
 Credit
 --------
-A ton of thanks to the folks at the tech team for the Obama campaign for inspiring this. Especially Jesse Kriss (@jkriss) and Chris Gansen (@cgansen) who really lit the path on Dashboard and our optimizations there. Huge thanks too to the folks testing and fixing early version: Christopher Manning (@christophermanning), Nathaniel Jones (@nthj), and Tom Fakes (@tomfakes).
+A ton of thanks to the folks at the tech team for the Obama campaign for inspiring this. Especially Jesse Kriss ([@jkriss](http://github.com/jkriss)) and Chris Gansen ([@cgansen](http://github.com/cgansen)) who really lit the path on Dashboard and our optimizations there. Huge thanks too to the folks testing and fixing early versions: Christopher Manning ([@christophermanning](http://github.com/christophermanning)), Nathaniel Jones ([@nthj](http://github.com/nthj)), and Tom Fakes ([@tomfakes](http://github.com/tomfakes)).
 
