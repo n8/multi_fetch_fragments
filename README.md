@@ -1,17 +1,24 @@
 Multi-fetch Fragments
 ===========
 
+> I just implemented this on the staging environment of [https://www.biglittlepond.com](https://www.biglittlepond.com). The one-line `render` call for the most recently collected items dropped from ~700 ms to ~50 ms. 25 items per page. This will be going into the production release later this week.
+
+>  [Nathaniel Jones](@thenthj)
+
+
 Multi-fetch Fragments makes rendering and caching a collection of template partials easier and faster. It takes advantage of the read_multi method on the Rails cache store. Some cache implementations have an optimized version of read_multi, which includes the popular Dalli client to Memcached. Traditionally, partial rendering and caching of a collection occurs sequentially, retrieving items from the cache store with the less optimized read method.
 
-In a super simple test Rails app described below, I saw a 46-77% improvement for the test action. 
+In a super simple test Rails app described below, I saw a 46-78% improvement for the test action.
 
-According to New Relic the test action went from an average of 152 ms to 34 ms. [Blitz.io](http://blitz.io), had their reports showing a test action taking an average of 168 ms per request improving to 90 ms. Application timeouts also decreased from 1% of requests to 0%. 
+According to New Relic the test action went from an average of 152 ms to 34 ms. Blitz.io, had their reports showing a test action taking an average of 168 ms per request improving to 90 ms. Application timeouts also decreased from 1% of requests to 0%.
 
 The ideal user of this gem is someone who's rendering and caching a large collection of the same partial. (e.g. Todo lists, rows in a table)
 
+<hr/> 
+
 ## Syntax
 
-If you want to automatically render a collection and cache each partial with it's default cache key: 
+Using this gem, if you want to automatically render a collection and cache each partial with its default cache key: 
 
 ```
 <%= render partial: 'item', collection: @items, cache: true %>
@@ -25,47 +32,46 @@ If you want a custom cache key for this same behavior, use a Proc:
 
 ## Background
 
-Rails makes rendering a collection of partial templates very easy: 
+One of the applications I worked on at the Obama campaign was Dashboard, a virtual field office we created. Dashboard doesn't talk directly to a database. It only speaks to a rest API called Narwhal. You can imagine the performance obstacles we faced building an application this way. So we had to take insane advantage of caching everything we could. This included looking for as many places as possible where we could fetch from Memcached in parallel using Rails' read_multi: 
+
+> <b>read_multi(*names)</b> public
+
+> Read multiple values at once from the cache. Options can be passed in the last argument.
+
+> Some cache implementation may optimize this method.
+
+> Returns a hash mapping the names provided to the values found.
+
+The result of all this is I'm constantly on the lookout for more places where caching can be optimized. And one area I've noticed recently is how us Rails developers render and cache collections of partials. 
+
+For example, at Inkling we render a client homepage as a collection of divs: 
 
 ```
-<%= render partial: 'item', collection: @items %>
+<%= render :partial => 'markets/market', :collection => @markets %>
 ```
 
-And if you want to make this fast, Rails makes it easy to add a fragment cache block within the item partial. _item.html.erb might look like this: 
+And each _market.html.erb partial is cached. If you looked inside you'd see something like: 
 
 ```
-<% cache item do %>
-  <p>
-    Slower things...
-
-    <%= item.name %>
-
-    Eat the grass jump feed me lay down in your way, sleeping in the sink siamese hairball stretching scratched climb the curtains lick lay down in your way. Feed me leap climb the curtains persian medium hair, siamese scratched sleep in the sink chuf fluffy fur sleep on your keyboard meow. Run zzz eat feed me sniff, sleep on your keyboard knock over the lamp making biscuits purr headbutt knock over the lamp. Sniff jump headbutt scottish fold sleep in the sink, attack biting chuf sunbathe eat persian give me fish. Claw kittens short hair stuck in a tree sleep on your keyboard leap, sunbathe persian jump purr. Jump on the table long hair judging you attack your ankles zzz judging you, persian stuck in a tree shed everywhere catnip. Fluffy fur eat the grass jump on the table rip the couch lay down in your way sniff, leap lay down in your way lick hiss toss the mousie. Medium hair give me fish feed me jump on the table hairball run, scottish fold climb the curtains lay down in your way lay down in your way ragdoll.
-  </p>
+<% cache(market) do %>
+slow things....
 <% end %>
-
 ```
 
-Caching the partial like this is great, but one drawback is that Rails will fetch each cached fragment sequentially. If you have to retrieve a bunch of these to render a single page, the additional overhead of fetching a bunch of things from Memcached can add up. Imagine if there's network latency between your app server and your memcache server. 
+It's tough to cache the entire collection of these partials in a single parent, because each user sees a different homepage depending on their permissions. But even if we could cache the entire page for lots of users, that parent cache would be invalidated each time one of its children changes, which they do, frequently. 
 
-But Rails has a method defined for its cache store to read_multi: 
+So for a long time I've dealt with the performance of rendering out pages where we read from Memcached dozens and dozens of times, sequentially. Memcached is fast, but fetching from Memcached like this can add up, especially over a cloud like Heroku. 
 
-> Read multiple values at once from the cache. Options can be passed in the last argument. 
-Some cache implementation may optimize this method. 
-Returns a hash mapping the names provided to the values found.
-
+Luckily, Memcached supports reading a bunch of things at one time. So I've tweaked the render method of Rails to utilize fetching multiple things at once. 
 
 How much faster?
 -----------------------------
 
-Depends on how many things your fetching from Memcached for a single page. But here's a simple application that renders 50 items to a page. Each of those items is a rendered partial that gets cached to memcache. 
-
-[https://github.com/n8/multi_fetch_fragments_test_app](https://github.com/n8/multi_fetch_fragments_test_app)
+Depends on how many things your fetching from Memcached for a single page. But I tested with [a simple application that renders 50 items to a page](https://github.com/n8/multi_fetch_fragments_test_app). Each of those items is a rendered partial that gets cached to Memcached. 
 
 There's two actions: without_gem and with_gem. without_gem performs caching around each individual fragment as it's rendered sequentially. with_gem uses the new ability this gem gives to the render partial method. 
 
-Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous users against the test app hosted on heroku. I configured heroku to use 10 dynos and unicorn with 3 workers on each dyno.
-
+Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous users against the test app hosted on Heroku. I configured Heroku to use 10 dynos and unicorn with 3 workers on each dyno.
 
 #### without_gem
 
@@ -81,6 +87,7 @@ This rush generated 705 successful hits in 1.0 min and we transferred 24.08 MB o
 
 The average response time was 90 ms.
 
+New Relic's report was even more rosy. According to New Relic, the test action went from an average of 152 ms to 34 ms.
 
 Installation
 ------------
@@ -96,9 +103,11 @@ Installation
 
 Note: You may need to refactor any partials that contain cache blocks. For example if you have an _item.html.erb partial with a cache block inside caching the item, you can remove the method call to "cache" and rely on the new render method abilities.
 
-
 Feedback
 --------
+[Source code available on Github](https://github.com/n8/multi_fetch_fragments). Feedback and pull requests are greatly appreciated.  Let me know if I can improve this.
 
-Feedback and pull requests are greatly appreciated. Let me know if I can improve this.
+Credit
+--------
+A ton of thanks to the folks at the tech team for the Obama campaign for inspiring this. Especially Jesse Kriss (@jkriss) and Chris Gansen (@cgansen) who really lit the path on Dashboard and our optimizations there. Huge thanks too to the folks testing and fixing early version: Christopher Manning (@christophermanning), Nathaniel Jones (@nthj), and Tom Fakes (@tomfakes).
 
