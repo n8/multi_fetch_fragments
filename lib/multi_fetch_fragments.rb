@@ -27,7 +27,8 @@ module MultiFetchFragments
           keys_to_collection_map[expanded_key] = item
         end
 
-        result_hash = Rails.cache.read_multi(keys_to_collection_map.keys)
+        # Keys from a hash are freezed and memcached may need to touch them
+        result_hash = Rails.cache.read_multi(keys_to_collection_map.keys.map(&:dup))
 
         # if we had a cached value, we don't need to render that object from the collection. 
         # if it wasn't cached, we need to render those objects as before
@@ -53,7 +54,8 @@ module MultiFetchFragments
             results << cached_value
           else
             non_cached_result = non_cached_results.shift
-            Rails.cache.write(key, non_cached_result, additional_cache_options)
+            # Keys from a hash are freezed and memcached may need to touch them
+            Rails.cache.write(key.dup, non_cached_result, additional_cache_options)
 
             results << non_cached_result
           end
