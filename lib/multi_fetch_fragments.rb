@@ -54,7 +54,8 @@ module MultiFetchFragments
             results << cached_value
           else
             non_cached_result = non_cached_results.shift
-            Rails.cache.write(key, non_cached_result, additional_cache_options)
+            # Keys from a hash are freezed and memcached may need to touch them
+            Rails.cache.write(key.dup, non_cached_result, additional_cache_options)
 
             results << non_cached_result
           end
