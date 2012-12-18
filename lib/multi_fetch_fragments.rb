@@ -27,7 +27,10 @@ module MultiFetchFragments
           keys_to_collection_map[expanded_key] = item
         end
 
-        result_hash = Rails.cache.read_multi(keys_to_collection_map.keys)
+        # cache.read_multi & cache.write interfaces may require mutable keys, ie. dalli 2.6.0
+        mutable_keys = keys_to_collection_map.keys.collect { |key| key.dup }
+
+        result_hash = Rails.cache.read_multi(mutable_keys)
 
         # if we had a cached value, we don't need to render that object from the collection. 
         # if it wasn't cached, we need to render those objects as before
@@ -46,7 +49,7 @@ module MultiFetchFragments
         end
 
         # sort the result according to the keys that were fed in, cache the non-cached results
-        keys_to_collection_map.each do |key, value|
+        mutable_keys.each do |key|
 
           cached_value = result_hash[key]
           if cached_value
