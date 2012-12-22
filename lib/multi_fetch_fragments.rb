@@ -21,6 +21,9 @@ module MultiFetchFragments
         additional_cache_options = @options.fetch(:cache_options, {})
         keys_to_collection_map = {}
 
+        # clone the original collection so we can manipulate it without affecting the original
+        @collection = @collection.clone
+
         @collection.each do |item|
           key = @options[:cache].is_a?(Proc) ? @options[:cache].call(item) : item
           expanded_key = ActiveSupport::Cache.expand_cache_key(key)
