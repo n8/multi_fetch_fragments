@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    multi_fetch_fragments (0.0.9)
+    multi_fetch_fragments (0.0.12)
 
 GEM
   remote: http://rubygems.org/
@@ -44,7 +44,7 @@ GEM
       rake (>= 0.8.7)
       rdoc (~> 3.4)
       thor (>= 0.14.6, < 2.0)
-    rake (10.0.2)
+    rake (10.0.3)
     rdoc (3.12)
       json (~> 1.4)
     rspec-core (2.12.1)

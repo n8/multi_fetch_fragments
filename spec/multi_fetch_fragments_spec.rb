@@ -13,10 +13,14 @@ describe MultiFetchFragments do
     RAILS_CACHE = cache_mock
     MultiFetchFragments::Railtie.run_initializers
 
-    view = ActionView::Base.new([File.dirname(__FILE__)], {})
+    controller = ActionController::Base.new
+    view = ActionView::Base.new([File.dirname(__FILE__)], {}, controller)
+
     customer = Customer.new("david")
-    key = ActiveSupport::Cache.expand_cache_key([customer, 'key'])
+    key = controller.fragment_cache_key([customer, 'key'])
+    
     cache_mock.should_receive(:read_multi).with([key]).and_return({key => 'Hello'})
+
     view.render(:partial => "views/customer", :collection => [ customer ], :cache => Proc.new{ |item| [item, 'key']}).should == "Hello"
   end
 end

@@ -26,7 +26,14 @@ module MultiFetchFragments
 
         @collection.each do |item|
           key = @options[:cache].is_a?(Proc) ? @options[:cache].call(item) : item
-          expanded_key = ActiveSupport::Cache.expand_cache_key(key)
+ 
+          expanded_key = nil
+          if defined?(@view.fragment_name_with_digest)
+            expanded_key = @view.fragment_name_with_digest(key)
+          else
+            expanded_key = @view.controller.fragment_cache_key(key)
+          end
+
           keys_to_collection_map[expanded_key] = item
         end
 
