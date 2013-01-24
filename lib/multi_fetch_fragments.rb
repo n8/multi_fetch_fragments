@@ -34,7 +34,7 @@ module MultiFetchFragments
             key_with_optional_digest = key
           end
 
-          expanded_key = @view.controller.fragment_cache_key(key_with_optional_digest) 
+          expanded_key = @view.controller.fragment_cache_key(key_with_optional_digest)
 
           keys_to_collection_map[expanded_key] = item
         end
@@ -44,7 +44,7 @@ module MultiFetchFragments
 
         result_hash = Rails.cache.read_multi(mutable_keys)
 
-        # if we had a cached value, we don't need to render that object from the collection. 
+        # if we had a cached value, we don't need to render that object from the collection.
         # if it wasn't cached, we need to render those objects as before
         result_hash.each do |key, value|
           if value
