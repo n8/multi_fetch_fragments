@@ -25,8 +25,8 @@ module MultiFetchFragments
         @collection = @collection.clone
 
         @collection.each do |item|
-          key = @options[:cache].is_a?(Proc) ? @options[:cache].call(item) : item
- 
+          key = @options[:cache].respond_to?(:call) ? @options[:cache].call(item) : item
+
           key_with_optional_digest = nil
           if defined?(@view.fragment_name_with_digest)
             key_with_optional_digest = @view.fragment_name_with_digest(key)
