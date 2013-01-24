@@ -16,7 +16,7 @@ module MultiFetchFragments
 
       results = []
 
-      if ActionController::Base.perform_caching && @options[:cache].present?
+      if cache_collection?
 
         additional_cache_options = @options.fetch(:cache_options, {})
         keys_to_collection_map = {}
@@ -79,6 +79,11 @@ module MultiFetchFragments
       end
 
       results.join(spacer).html_safe
+    end
+
+    def cache_collection?
+      cache_option = @options[:cache].presence || @locals[:cache].presence
+      ActionController::Base.perform_caching && cache_option
     end
 
   class Railtie < Rails::Railtie
