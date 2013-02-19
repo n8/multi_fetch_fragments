@@ -21,9 +21,6 @@ module MultiFetchFragments
         additional_cache_options = @options.fetch(:cache_options, {})
         keys_to_collection_map = {}
 
-        # clone the original collection so we can manipulate it without affecting the original
-        @collection = @collection.clone
-
         @collection.each do |item|
           key = @options[:cache].is_a?(Proc) ? @options[:cache].call(item) : item
  
@@ -46,11 +43,8 @@ module MultiFetchFragments
 
         # if we had a cached value, we don't need to render that object from the collection. 
         # if it wasn't cached, we need to render those objects as before
-        result_hash.each do |key, value|
-          if value
-            collection_item = keys_to_collection_map[key]
-            @collection.delete(collection_item)
-          end
+        @collection = (keys_to_collection_map.keys - result_hash.keys).map do |key|
+          keys_to_collection_map[key]
         end
 
         non_cached_results = []
