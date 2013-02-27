@@ -20,13 +20,13 @@ The ideal user of this gem is someone who's rendering and caching a large collec
 
 Using this gem, if you want to automatically render a collection and cache each partial with its default cache key: 
 
-```
+```erb
 <%= render partial: 'item', collection: @items, cache: true %>
 ```
 
 If you want a custom cache key for this same behavior, use a Proc: 
 
-```
+```erb
 <%= render partial: 'item', collection: @items, cache: Proc.new{|item| [item, 'show']} %>
 ```
 
@@ -46,13 +46,13 @@ The result of all this is I'm constantly on the lookout for more places where ca
 
 For example, at Inkling we render a client homepage as a collection of divs: 
 
-```
+```erb
 <%= render :partial => 'markets/market', :collection => @markets %>
 ```
 
 And each _market.html.erb partial is cached. If you looked inside you'd see something like: 
 
-```
+```erb
 <% cache(market) do %>
 slow things....
 <% end %>
@@ -97,7 +97,7 @@ Installation
 3. Restart your server 
 4. Render collection of objects with their partial using the new syntax (see above): 
 
-```
+```erb
 <%= render partial: 'item', collection: @items, cache: true %>
 ```
 
