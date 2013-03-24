@@ -14,25 +14,33 @@ According to New Relic the test action went from an average of 152 ms to 34 ms. 
 
 The ideal user of this gem is someone who's rendering and caching a large collection of the same partial. (e.g. Todo lists, rows in a table)
 
-<hr/> 
+<hr/>
 
 ## Syntax
 
-Using this gem, if you want to automatically render a collection and cache each partial with its default cache key: 
+Using this gem, if you want to automatically render a collection and cache each partial with its default cache key:
 
 ```erb
 <%= render partial: 'item', collection: @items, cache: true %>
 ```
+Short-hand rendering of partials is also supported:
 
-If you want a custom cache key for this same behavior, use a Proc: 
+```erb
+<%= render @items, cache: true %>
+```
+
+If you want a custom cache key for this same behavior, use a Proc or lambda (or any object that responds to call):
 
 ```erb
 <%= render partial: 'item', collection: @items, cache: Proc.new{|item| [item, 'show']} %>
 ```
 
+Note: `cache: false` also disables the cached rendering.
+
+
 ## Background
 
-One of the applications I worked on at the Obama campaign was Dashboard, a virtual field office we created. Dashboard doesn't talk directly to a database. It only speaks to a rest API called Narwhal. You can imagine the performance obstacles we faced building an application this way. So we had to take insane advantage of caching everything we could. This included looking for as many places as possible where we could fetch from Memcached in parallel using Rails' read_multi: 
+One of the applications I worked on at the Obama campaign was Dashboard, a virtual field office we created. Dashboard doesn't talk directly to a database. It only speaks to a rest API called Narwhal. You can imagine the performance obstacles we faced building an application this way. So we had to take insane advantage of caching everything we could. This included looking for as many places as possible where we could fetch from Memcached in parallel using Rails' read_multi:
 
 > <b>read_multi(*names)</b> public
 
@@ -42,15 +50,15 @@ One of the applications I worked on at the Obama campaign was Dashboard, a virtu
 
 > Returns a hash mapping the names provided to the values found.
 
-The result of all this is I'm constantly on the lookout for more places where caching can be optimized. And one area I've noticed recently is how us Rails developers render and cache collections of partials. 
+The result of all this is I'm constantly on the lookout for more places where caching can be optimized. And one area I've noticed recently is how us Rails developers render and cache collections of partials.
 
-For example, at Inkling we render a client homepage as a collection of divs: 
+For example, at Inkling we render a client homepage as a collection of divs:
 
 ```erb
-<%= render :partial => 'markets/market', :collection => @markets %>
+<%= render partial: 'markets/market', collection: @markets %>
 ```
 
-And each _market.html.erb partial is cached. If you looked inside you'd see something like: 
+And each _market.html.erb partial is cached. If you looked inside you'd see something like:
 
 ```erb
 <% cache(market) do %>
@@ -58,18 +66,18 @@ slow things....
 <% end %>
 ```
 
-It's tough to cache the entire collection of these partials in a single parent, because each user sees a different homepage depending on their permissions. But even if we could cache the entire page for lots of users, that parent cache would be invalidated each time one of its children changes, which they do, frequently. 
+It's tough to cache the entire collection of these partials in a single parent, because each user sees a different homepage depending on their permissions. But even if we could cache the entire page for lots of users, that parent cache would be invalidated each time one of its children changes, which they do, frequently.
 
-So for a long time I've dealt with the performance of rendering out pages where we read from Memcached dozens and dozens of times, sequentially. Memcached is fast, but fetching from Memcached like this can add up, especially over a cloud like Heroku. 
+So for a long time I've dealt with the performance of rendering out pages where we read from Memcached dozens and dozens of times, sequentially. Memcached is fast, but fetching from Memcached like this can add up, especially over a cloud like Heroku.
 
-Luckily, Memcached supports reading a bunch of things at one time. So I've tweaked the render method of Rails to utilize fetching multiple things at once. 
+Luckily, Memcached supports reading a bunch of things at one time. So I've tweaked the render method of Rails to utilize fetching multiple things at once.
 
 How much faster?
 -----------------------------
 
-Depends on how many things your fetching from Memcached for a single page. But I tested with [a simple application that renders 50 items to a page](https://github.com/n8/multi_fetch_fragments_test_app). Each of those items is a rendered partial that gets cached to Memcached. 
+Depends on how many things your fetching from Memcached for a single page. But I tested with [a simple application that renders 50 items to a page](https://github.com/n8/multi_fetch_fragments_test_app). Each of those items is a rendered partial that gets cached to Memcached.
 
-There's two actions: without_gem and with_gem. without_gem performs caching around each individual fragment as it's rendered sequentially. with_gem uses the new ability this gem gives to the render partial method. 
+There's two actions: without_gem and with_gem. without_gem performs caching around each individual fragment as it's rendered sequentially. with_gem uses the new ability this gem gives to the render partial method.
 
 Using [Blitz.io](http://blitz.io) I ran a test ramping up to 25 simultaneous users against the test app hosted on Heroku. I configured Heroku to use 10 dynos and unicorn with 3 workers on each dyno.
 
@@ -94,8 +102,8 @@ Installation
 
 1. Add `gem 'multi_fetch_fragments'` to your Gemfile.
 2. Run `bundle install`.
-3. Restart your server 
-4. Render collection of objects with their partial using the new syntax (see above): 
+3. Restart your server
+4. Render collection of objects with their partial using the new syntax (see above):
 
 ```erb
 <%= render partial: 'item', collection: @items, cache: true %>
