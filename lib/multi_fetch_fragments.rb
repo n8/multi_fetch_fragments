@@ -82,8 +82,8 @@ module MultiFetchFragments
 
   class Railtie < Rails::Railtie
     initializer "multi_fetch_fragments.initialize" do |app|
-      ActionView::PartialRenderer.class_eval do
-        include MultiFetchFragments
+      ActiveSupport.on_load(:action_view) do
+        ActionView::PartialRenderer.send(:include, MultiFetchFragments)
       end
     end
   end
