@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    multi_fetch_fragments (0.0.13)
+    multi_fetch_fragments (0.0.14)
 
 GEM
   remote: http://rubygems.org/
