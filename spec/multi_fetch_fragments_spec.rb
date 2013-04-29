@@ -4,7 +4,9 @@ describe MultiFetchFragments do
   it "doesn't smoke" do
     MultiFetchFragments::Railtie.run_initializers
 
-    view = ActionView::Base.new([File.dirname(__FILE__)], {})
+    controller = ActionController::Base.new
+    view = ActionView::Base.new([File.dirname(__FILE__)], {}, controller)
+
     view.render(:partial => "views/customer", :collection => [ Customer.new("david"), Customer.new("mary") ]).should == "Hello: david\nHello: mary\n"
   end
 
@@ -14,13 +16,14 @@ describe MultiFetchFragments do
     MultiFetchFragments::Railtie.run_initializers
 
     controller = ActionController::Base.new
+    controller.cache_store = cache_mock
     view = ActionView::Base.new([File.dirname(__FILE__)], {}, controller)
 
     customer = Customer.new("david")
     key = controller.fragment_cache_key([customer, 'key'])
     
-    cache_mock.should_receive(:read_multi).with([key]).and_return({key => 'Hello'})
+    cache_mock.should_receive(:read_multi).with([key], {}).and_return({key => 'Hello'})
 
-    view.render(:partial => "views/customer", :collection => [ customer ], :cache => Proc.new{ |item| [item, 'key']}).should == "Hello"
+    view.render(:partial => "views/customer", :collection => [ customer ], :cache => Proc.new{ |item| [item, 'key']}).should == "Hello: david\n"
   end
 end
