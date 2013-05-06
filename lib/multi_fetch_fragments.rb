@@ -27,6 +27,8 @@ module MultiFetchFragments
           key_with_optional_digest = nil
           if defined?(@view.fragment_name_with_digest)
             key_with_optional_digest = @view.fragment_name_with_digest(key, @view.view_cache_dependencies)
+          elsif defined?(@view.cache_fragment_name)
+            key_with_optional_digest = @view.cache_fragment_name(key)
           else
             key_with_optional_digest = key
           end
