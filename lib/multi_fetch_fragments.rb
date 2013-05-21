@@ -18,7 +18,7 @@ module MultiFetchFragments
 
       if cache_collection?
 
-        additional_cache_options = @options.fetch(:cache_options, {})
+        additional_cache_options = @options[:cache_options] || @locals[:cache_options] || {}
         keys_to_collection_map = {}
 
         @collection.each do |item|
