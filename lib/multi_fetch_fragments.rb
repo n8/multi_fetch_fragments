@@ -33,7 +33,7 @@ module MultiFetchFragments
         keys = keys_to_item_info_map.keys.map(&:dup)
 
         cached_results = @view.controller.instrument_fragment_cache(:read_fragment, keys.join("; ")) do
-          cached_results = @view.controller.cache_store.read_multi(keys, cache_options)
+          cached_results = @view.controller.cache_store.read_multi(*keys, cache_options)
 
           cached_results.each do |key, result|
             cached_results[key] = result.html_safe if result.respond_to?(:html_safe)
