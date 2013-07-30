@@ -33,7 +33,8 @@ module MultiFetchFragments
             key_with_optional_digest = key
           end
 
-          expanded_key = @view.controller.fragment_cache_key(key_with_optional_digest)
+
+          expanded_key = fragment_cache_key(key_with_optional_digest)
 
           keys_to_collection_map[expanded_key] = item
         end
@@ -80,6 +81,12 @@ module MultiFetchFragments
     def cache_collection?
       cache_option = @options[:cache].presence || @locals[:cache].presence
       ActionController::Base.perform_caching && cache_option
+    end
+
+    # from Rails fragment_cache_key in ActionController::Caching::Fragments. Adding it here since it's tucked inside an instance method on the controller, and 
+    # it's utility could be used in a view without a controller
+    def fragment_cache_key(key)
+      ActiveSupport::Cache.expand_cache_key(key.is_a?(Hash) ? url_for(key).split("://").last : key, :views)
     end
 
   class Railtie < Rails::Railtie
