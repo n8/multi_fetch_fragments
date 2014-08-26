@@ -74,7 +74,7 @@ module MultiFetchFragments
             result = uncached_results.shift
 
             @view.controller.instrument_fragment_cache(:write_fragment, key) do
-              @view.controller.cache_store.write(key, result.to_str, cache_options)
+              @view.controller.cache_store.write(key, result.try(:to_str), cache_options)
             end
           end
             
