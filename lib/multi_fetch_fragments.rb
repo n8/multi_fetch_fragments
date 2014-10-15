@@ -89,7 +89,7 @@ module MultiFetchFragments
 
     def cache_collection?
       cache_option = @options[:cache].presence || @locals[:cache].presence
-      @view.controller.perform_caching && @view.controller.cache_store && cache_option
+      @view.controller && @view.controller.perform_caching && @view.controller.cache_store && cache_option
     end
 
   class Railtie < Rails::Railtie
