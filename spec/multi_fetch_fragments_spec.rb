@@ -8,9 +8,43 @@ describe MultiFetchFragments do
     view.render(:partial => "views/customer", :collection => [ Customer.new("david"), Customer.new("mary") ]).should == "Hello: david\nHello: mary\n"
   end
 
+  context "variant_counter" do
+
+    it "does not break existing functionality" do
+      MultiFetchFragments::Railtie.run_initializers
+
+      view = ActionView::Base.new([File.dirname(__FILE__)], {})
+      view.render(:partial => "views/counter", :collection => [ Customer.new("david"), Customer.new("mary") ], :as => :customer).should == "Count: 0\nCount: 1\n"
+    end
+
+    it "works for the cached version" do
+      cache_mock = double()
+      Rails.cache = cache_mock
+      MultiFetchFragments::Railtie.run_initializers
+
+      controller = ActionController::Base.new
+      view = ActionView::Base.new([File.dirname(__FILE__)], {}, controller)
+
+      david = Customer.new("david")
+      key1 = controller.fragment_cache_key([david, 'key'])
+
+      mary = Customer.new("mary")
+      key2 = controller.fragment_cache_key([mary, 'key'])
+
+      simon = Customer.new("simon")
+      key3 = controller.fragment_cache_key([simon, 'key'])
+
+      cache_mock.should_receive(:read_multi).with(key1, key2, key3).and_return({key1 => "Count: 0, CacheSafeCount: 0\n"})
+      cache_mock.should_receive(:write).twice
+
+      view.render(:partial => "views/cache_safe_counter", :collection => [ david, mary, simon ], :cache => Proc.new{ |item| [item, 'key']}, :as => :customer).should == "Count: 0, CacheSafeCount: 0\nCount: 0, CacheSafeCount: 1\nCount: 1, CacheSafeCount: 2\n"
+    end
+
+  end
+
   it "works for passing in a custom key" do
-    cache_mock = mock()
-    RAILS_CACHE = cache_mock
+    cache_mock = double()
+    Rails.cache = cache_mock
     MultiFetchFragments::Railtie.run_initializers
 
     controller = ActionController::Base.new
@@ -18,9 +52,11 @@ describe MultiFetchFragments do
 
     customer = Customer.new("david")
     key = controller.fragment_cache_key([customer, 'key'])
-    
+
     cache_mock.should_receive(:read_multi).with(key).and_return({key => 'Hello'})
 
     view.render(:partial => "views/customer", :collection => [ customer ], :cache => Proc.new{ |item| [item, 'key']}).should == "Hello"
   end
+
+
 end
