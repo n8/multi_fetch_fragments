@@ -25,7 +25,6 @@ module MultiFetchFragments
   def collection_with_template_with_multi_fetch_cache
     view, locals, template = @view, @locals, @template
     as, counter = @variable, @variable_counter
-    collection_index_map = @collection_index_map
 
     if layout = @options[:layout]
       layout = find_template(layout, @template_keys)
@@ -36,9 +35,7 @@ module MultiFetchFragments
       locals[as]      = object
       locals[counter] = (index += 1)
 
-      if collection_index_map
-        locals[cache_safe_variable_counter] = collection_index_map[object]
-      end
+      locals[cache_safe_variable_counter] = cache_safe_variable_counter_value(object) || locals[counter]
 
       content = template.render(view, locals)
       content = layout.render(view, locals) { content } if layout
@@ -48,7 +45,6 @@ module MultiFetchFragments
 
   def collection_without_template_with_multi_fetch_cache
     view, locals, collection_data = @view, @locals, @collection_data
-    collection_index_map = @collection_index_map
     cache = {}
     keys  = @locals.keys
 
@@ -60,12 +56,16 @@ module MultiFetchFragments
       locals[as]      = object
       locals[counter] ||= index
 
-      if collection_index_map
-        locals[cache_safe_variable_counter] = collection_index_map[object]
-      end
+      locals[cache_safe_variable_counter] = cache_safe_variable_counter_value(object) || locals[counter]
 
       template = (cache[path] ||= find_template(path, keys + [as, counter]))
       template.render(view, locals)
+    end
+  end
+
+  def cache_safe_variable_counter_value(object)
+    if collection_index_map = @collection_index_map
+      collection_index_map[object]
     end
   end
 
