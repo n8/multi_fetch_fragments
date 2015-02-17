@@ -18,7 +18,7 @@ module MultiFetchFragments
 
   def retrieve_template_keys_with_multi_fetch_cache
     keys = @locals.keys
-    keys << @variable         if @object || @collection
+    keys << @variable         if defined?(@object) || @collection
     keys << @variable_counter if @collection
     keys << cache_safe_variable_counter if @collection
     keys
