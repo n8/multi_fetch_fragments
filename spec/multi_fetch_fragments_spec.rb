@@ -19,10 +19,10 @@ describe MultiFetchFragments do
 
     it "works for the cached version" do
       cache_mock = double()
-      Rails.cache = cache_mock
       MultiFetchFragments::Railtie.run_initializers
 
       controller = ActionController::Base.new
+      controller.cache_store = cache_mock
       view = ActionView::Base.new([File.dirname(__FILE__)], {}, controller)
 
       david = Customer.new("david")
@@ -44,10 +44,10 @@ describe MultiFetchFragments do
 
   it "works for passing in a custom key" do
     cache_mock = double()
-    Rails.cache = cache_mock
     MultiFetchFragments::Railtie.run_initializers
 
     controller = ActionController::Base.new
+    controller.cache_store = cache_mock
     view = ActionView::Base.new([File.dirname(__FILE__)], {}, controller)
 
     customer = Customer.new("david")
