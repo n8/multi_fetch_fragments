@@ -16,6 +16,14 @@ module MultiFetchFragments
     ('cache_safe_' + @variable_counter.to_s).to_sym
   end
 
+  def preloader
+    @preloader ||= ActiveRecord::Associations::Preloader.new
+  end
+
+  def preload_collection
+    preloader.preload(@collection, @options[:preload]) if @options[:preload]
+  end
+
   def retrieve_template_keys_with_multi_fetch_cache
     keys = @locals.keys
     keys << @variable         if defined?(@object) || @collection
@@ -31,6 +39,8 @@ module MultiFetchFragments
     if layout = @options[:layout]
       layout = find_template(layout, @template_keys)
     end
+
+    preload_collection
 
     index = -1
     @collection.map do |object|
@@ -49,6 +59,8 @@ module MultiFetchFragments
     view, locals, collection_data = @view, @locals, @collection_data
     cache = {}
     keys  = @locals.keys
+
+    preload_collection
 
     index = -1
     @collection.map do |object|
