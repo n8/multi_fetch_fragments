@@ -8,8 +8,23 @@ describe MultiFetchFragments do
     view.render(:partial => "views/customer", :collection => [ Customer.new("david"), Customer.new("mary") ]).should == "Hello: david\nHello: mary\n"
   end
 
-  context "variant_counter" do
+  context "use of procs" do
+    let(:item) { double(:something) }
+    let(:collection) { [item] }
 
+    it "allows the use of a procs" do
+      MultiFetchFragments::Railtie.run_initializers
+      view = ActionView::Base.new([File.dirname(__FILE__)], {})
+      expect(collection).to receive(:foobar).with(1)
+      view.render(partial: "views/counter",
+                  proc: Proc.new { |collection| collection.foobar(1) },
+                  collection: collection,
+                  as: :customer
+                 )
+    end
+  end
+
+  context "variant_counter" do
     it "does not break existing functionality" do
       MultiFetchFragments::Railtie.run_initializers
 
@@ -39,7 +54,6 @@ describe MultiFetchFragments do
 
       view.render(:partial => "views/cache_safe_counter", :collection => [ david, mary, simon ], :cache => Proc.new{ |item| [item, 'key']}, :as => :customer).should == "Count: 0, CacheSafeCount: 0\nCount: 0, CacheSafeCount: 1\nCount: 1, CacheSafeCount: 2\n"
     end
-
   end
 
   it "works for passing in a custom key" do
@@ -57,6 +71,4 @@ describe MultiFetchFragments do
 
     view.render(:partial => "views/customer", :collection => [ customer ], :cache => Proc.new{ |item| [item, 'key']}).should == "Hello"
   end
-
-
 end
