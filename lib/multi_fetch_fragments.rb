@@ -23,12 +23,13 @@ module MultiFetchFragments
 
         @collection.each do |item|
           key = @options[:cache].respond_to?(:call) ? @options[:cache].call(item) : item
+          skip_digest = @options[:cache].respond_to?(:call) # assume we are handling cache key expiry ourselves
 
           key_with_optional_digest = nil
           if defined?(@view.fragment_name_with_digest)
             key_with_optional_digest = @view.fragment_name_with_digest(key, @view.view_cache_dependencies)
           elsif defined?(@view.cache_fragment_name)
-            key_with_optional_digest = @view.cache_fragment_name(key)
+            key_with_optional_digest = @view.cache_fragment_name(key, skip_digest: skip_digest)
           else
             key_with_optional_digest = key
           end
